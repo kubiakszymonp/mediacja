@@ -26,13 +26,20 @@ export class LLMService {
 
   public async sendMessage(messages: Message[]): Promise<LLMResponse> {
     try {
+      // Logujemy wszystkie wiadomości przychodzące
+      console.group("📥 Otrzymane wiadomości:");
+      messages.forEach((msg, index) => {
+        console.log(`[${msg.role.toUpperCase()}] ${index + 1}:`, msg.content);
+      });
+      console.groupEnd();
+
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o-mini',
         messages: messages,
-        temperature: 0.7,
+        temperature: 0,
       });
 
-      return {
+      const result: LLMResponse = {
         content: response.choices[0].message.content || '',
         usage: response.usage ? {
           promptTokens: response.usage.prompt_tokens,
@@ -40,8 +47,16 @@ export class LLMService {
           totalTokens: response.usage.total_tokens,
         } : undefined,
       };
+
+      // Logujemy odpowiedź
+      console.group("📤 Wygenerowana odpowiedź:");
+      console.log("Treść:", result.content);
+      console.log("Użycie tokenów:", result.usage);
+      console.groupEnd();
+
+      return result;
     } catch (error) {
-      console.error('Błąd podczas komunikacji z modelem językowym:', error);
+      console.error('❌ Błąd podczas komunikacji z modelem językowym:', error);
       throw error;
     }
   }

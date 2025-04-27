@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, FileText, List } from "lucide-react";
+import { Mic, MicOff, FileText, List, Lightbulb } from "lucide-react";
 import { useState, useCallback } from "react";
-import SummaryPoints from "./SummaryPoints";
+import SummaryView from "./SummaryView";
 import TranscriptionView from "./TranscriptionView";
+import RecommendationsView from "./RecommendationsView";
 import { useDiscussion } from "@/contexts/DiscussionContext";
 import { toast } from "sonner";
 import { audioRecordingService } from "@/services/audioRecordingService";
@@ -13,38 +14,43 @@ interface ParticipantTabProps {
 }
 
 export default function ParticipantTab({ participant }: ParticipantTabProps) {
-  const [viewMode, setViewMode] = useState<"summary" | "transcription">(
-    "summary"
-  );
+  const [viewMode, setViewMode] = useState<
+    "summary" | "transcription" | "recommendation"
+  >("recommendation");
   const { getParticipantData, setRecording, addTranscript } = useDiscussion();
   const { isRecording } = getParticipantData(participant);
+
+  const handleTranscription = async (audioBlob: Blob) => {
+    try {
+      // Transkrypcja
+      const transcriptionToast = toast.loading("Trwa transkrypcja nagrania...");
+      const result = await transcriptionService.transcribeAudio(audioBlob);
+      toast.dismiss(transcriptionToast);
+      toast.success("Transkrypcja zakończona pomyślnie", {
+        duration: 1000,
+      });
+      await addTranscript(participant, result);
+    } catch (error) {
+      console.error("Błąd podczas przetwarzania nagrania:", error);
+      toast.error("Wystąpił błąd podczas przetwarzania nagrania");
+    }
+  };
 
   const handleRecordingToggle = useCallback(async () => {
     try {
       if (!isRecording) {
         await audioRecordingService.startRecording();
         setRecording(participant, true);
-        toast.success("Rozpoczęto nagrywanie");
       } else {
         const audioBlob = await audioRecordingService.stopRecording();
         setRecording(participant, false);
-        toast.success("Zakończono nagrywanie");
-
-        // Rozpoczynamy transkrypcję
-        toast.promise(
-          transcriptionService.transcribeAudio(audioBlob).then((result) => {
-            addTranscript(participant, result);
-          }),
-          {
-            loading: "Trwa transkrypcja nagrania...",
-            success: "Transkrypcja zakończona pomyślnie",
-            error: "Wystąpił błąd podczas transkrypcji",
-          }
-        );
+        await handleTranscription(audioBlob);
       }
     } catch (error) {
       console.error("Błąd podczas obsługi nagrywania:", error);
-      toast.error("Wystąpił błąd podczas obsługi nagrywania");
+      toast.error("Wystąpił błąd podczas obsługi nagrywania", {
+        duration: 1000,
+      });
       setRecording(participant, false);
     }
   }, [isRecording, participant, setRecording, addTranscript]);
@@ -54,6 +60,14 @@ export default function ParticipantTab({ participant }: ParticipantTabProps) {
       <div className="shrink-0 flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">{participant}</h2>
         <div className="flex gap-2">
+          <Button
+            variant={viewMode === "recommendation" ? "default" : "outline"}
+            onClick={() => setViewMode("recommendation")}
+            size="sm"
+          >
+            <Lightbulb className="h-4 w-4 mr-2" />
+            Rekomendacje
+          </Button>
           <Button
             variant={viewMode === "summary" ? "default" : "outline"}
             onClick={() => setViewMode("summary")}
@@ -76,9 +90,11 @@ export default function ParticipantTab({ participant }: ParticipantTabProps) {
       <div className="flex-1 overflow-y-auto min-h-0 relative">
         <div className="absolute inset-0 overflow-y-auto">
           {viewMode === "summary" ? (
-            <SummaryPoints participant={participant} />
-          ) : (
+            <SummaryView participant={participant} />
+          ) : viewMode === "transcription" ? (
             <TranscriptionView participant={participant} />
+          ) : (
+            <RecommendationsView participant={participant} />
           )}
         </div>
       </div>

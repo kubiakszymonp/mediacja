@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { MockTranscriptionService } from "./mockTranscriptionService";
+import { downloadAudioBlob } from "./downloadAudioBlob";
 
 export interface TranscriptionResult {
   text: string;
@@ -18,13 +19,17 @@ export class TranscriptionService {
 
   public async transcribeAudio(audioBlob: Blob): Promise<TranscriptionResult> {
     try {
+      // await downloadAudioBlob(audioBlob);
       // Konwertujemy Blob na File, który jest wymagany przez API OpenAI
       const file = new File([audioBlob], "audio.wav", { type: audioBlob.type });
 
       const response = await this.openai.audio.transcriptions.create({
         file: file,
         model: "whisper-1",
+        language: "pl",
       });
+
+      console.log(`Transkrypcja: ${response.text}`);
 
       return {
         text: response.text,
@@ -37,6 +42,6 @@ export class TranscriptionService {
   }
 }
 
-// export const transcriptionService = new TranscriptionService();
+export const transcriptionService = new TranscriptionService();
 
-export const transcriptionService = new MockTranscriptionService();
+// export const transcriptionService = new MockTranscriptionService();
