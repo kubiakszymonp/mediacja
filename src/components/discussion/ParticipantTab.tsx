@@ -53,7 +53,7 @@ export default function ParticipantTab({ participant }: ParticipantTabProps) {
       });
       setRecording(participant, false);
     }
-  }, [isRecording, participant, setRecording, addTranscript]);
+  }, [isRecording, participant, setRecording, addTranscript, handleTranscription]);
 
   return (
     <div className="flex flex-col h-full">

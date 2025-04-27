@@ -1,6 +1,5 @@
 import OpenAI from "openai";
-import { MockTranscriptionService } from "./mockTranscriptionService";
-import { downloadAudioBlob } from "./downloadAudioBlob";
+import { containsBlacklistedWords } from "@/utils/removeTranscriptionFromBlacklist";
 
 export interface TranscriptionResult {
   text: string;
@@ -30,6 +29,15 @@ export class TranscriptionService {
       });
 
       console.log(`Transkrypcja: ${response.text}`);
+
+      const ignoreTranscription = containsBlacklistedWords(response.text);
+
+      if (ignoreTranscription) {
+        return {
+          text: "",
+          timestamp: new Date(),
+        };
+      }
 
       return {
         text: response.text,

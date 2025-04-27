@@ -7,7 +7,6 @@ export const useAuth = () => {
 
   useEffect(() => {
     const checkAuth = () => {
-      debugger
       const password = prompt("Wprowadź hasło dostępu:");
       if (password === process.env.NEXT_PUBLIC_APP_PASSWORD) {
         setIsAuthorized(true);

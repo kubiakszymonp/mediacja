@@ -1,10 +1,5 @@
 import { useDiscussion } from "@/contexts/DiscussionContext";
 
-interface TranscriptionEntry {
-  time: string;
-  content: string;
-}
-
 interface TranscriptionViewProps {
   participant: string;
 }
@@ -31,9 +26,8 @@ export default function TranscriptionView({
               <span className="text-sm font-medium text-muted-foreground">
                 {formatTime(entry.timestamp)}
               </span>
-              <span className="text-sm font-medium">{participant}</span>
+              <span>{entry.text}</span>
             </div>
-            <p>{entry.text}</p>
           </div>
         ))}
       </div>

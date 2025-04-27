@@ -8,7 +8,6 @@ import {
 } from "react";
 import {
   summaryService,
-  ConversationPayload,
 } from "../services/summaryService";
 import { recommendationsService } from "../services/recommendationsService";
 
